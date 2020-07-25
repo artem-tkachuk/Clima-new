@@ -7,22 +7,42 @@
 //
 
 import Foundation
+import CoreLocation
 
+//MARK: - WeatherManagerDelegate protocol
 protocol WeatherManagerDelegate {
     func didUpdateWeather(_ weatherManager: WeatherManager, _ weather: WeatherModel)
     func didFailWithError(_ error: Error)
 }
 
+
+//MARK: - WeatherManagerDelegate
 struct WeatherManager {
-    let weatherURL = "https://api.openweathermap.org/data/2.5/weather?&appid=&units=metric&q="
+    let appid = String(ProcessInfo.processInfo.environment["appid"]!)
+    var weatherURL: String {
+        "https://api.openweathermap.org/data/2.5/weather?&appid=\(appid)&units=metric&"
+    }
     
     var delegate: WeatherManagerDelegate?
     
+    //MARK: - fetchWeather()
+    //Preparation for calling performRequest()
     func fetchWeather(_ cityName: String) {
-        let urlString = weatherURL + cityName
+        if let urlEncodedCityName = cityName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            print(appid)
+            print(weatherURL)
+            let urlString = weatherURL + "q=\(urlEncodedCityName)"
+            performRequest(with: urlString)
+        }
+    }
+    
+    func fetchWeather(_ lat: CLLocationDegrees, _ lon: CLLocationDegrees) {
+        let urlString = weatherURL + "lat=\(lat)" + "&" + "lon=\(lon)"
         performRequest(with: urlString)
     }
     
+    //MARK: - performRequest()
+    //Making a request to the OpenWeatherMap API to obtain the weather data
     func performRequest(with urlString: String) {
         //1. Create a URL
         if let url = URL(string: urlString) {
@@ -37,7 +57,6 @@ struct WeatherManager {
                 } else {
                     if let safeData = data {
                         if let weather = self.parseJSON(weatherData: safeData) {   //in closure we must add self. to the method call
-                            print(weather)
                             // Weather manager triggers the delegate method and passes the weather object
                             self.delegate?.didUpdateWeather(self, weather)
                         
@@ -50,6 +69,8 @@ struct WeatherManager {
         }
     }
     
+    //MARK: - parseJSON()
+    //Parsing JSON obtained from the OpenWeatherMap API
     func parseJSON(weatherData: Data) -> WeatherModel? {
         let decoder = JSONDecoder()
         do {

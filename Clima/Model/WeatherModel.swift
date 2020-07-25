@@ -9,12 +9,12 @@
 import Foundation
 
 struct WeatherModel {
-    //Stored properties
+    //MARK: - Stored properties
     let conditionID: Int
     let cityName: String
     let temperature: Double
     
-    //Computer properties
+    //MARK: - Computed properties
     var temperatureString: String {
         return String(format: "%.1f", temperature)
     }
@@ -40,6 +40,7 @@ struct WeatherModel {
         }
     }
     
+    //MARK: - Initializer
     init(_ conditionID: Int, _ cityName: String, _ temperature: Double) {
         self.conditionID = conditionID
         self.cityName = cityName
